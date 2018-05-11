@@ -105,3 +105,7 @@ venv.bak/
 
 #test file
 test.py
+
+#mysql connection
+mysql.py
+mysql_df.py
