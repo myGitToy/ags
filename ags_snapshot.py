@@ -125,7 +125,7 @@ def analyze():
     #print(np.percentile(a['数据'], 25))
 def analyze_person_month(name=None,start='',end='',column=''):
     '''
-    [数据统计-列出某项快照数据的全部结果]######
+    [数据统计-列出某人指定日期间的某项快照数据全部结果]######
     函数说明 乔晖 2018/4/22
     [输入Parameters]:
         name:string 姓名 e.g. 乔晖
@@ -147,7 +147,7 @@ def analyze_person_month(name=None,start='',end='',column=''):
     '''
 def analyze_person_monthlist(name=None,monthlist='',column=''):
     '''
-    [数据统计-列出某项快照数据的全部结果]######
+    [数据统计-列出某人按月分分布的某项快照数据全部结果]######
     函数说明 乔晖 2018/4/22
     [输入Parameters]:
         name:string 姓名 e.g. 乔晖
@@ -180,10 +180,10 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
         else:
             pass
 #数据清洗
-#clean()
+clean()
 #数据匹配
-#match()
-#analyze()
+match()
+analyze()
 analyze_person_monthlist(name='唐驰',monthlist=['2018-01','2018-02','2018-03','2018-04'],column='`DIST_LDG (feet)`')
 #analyze_person_monthlist(name='刘富元',monthlist=['2018-01','2018-02','2018-03'],column='`DIST_LDG (feet)`')
 #analyze_person_monthlist(name='刘长家',monthlist=['2018-01','2018-02','2018-03'],column='`DIST_LDG (feet)`')
