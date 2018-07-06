@@ -147,7 +147,7 @@ def analyze_person_month(name=None,start='',end='',column=''):
     '''
 def analyze_person_monthlist(name=None,monthlist='',column=''):
     '''
-    [数据统计-列出某人按月分分布的某项快照数据全部结果]######
+    [数据统计-列出某人按月分布的某项快照数据全部结果]######
     函数说明 乔晖 2018/4/22
     [输入Parameters]:
         name:string 姓名 e.g. 乔晖

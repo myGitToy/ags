@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from mysql import query,query_list
+from Python.RDS.mysql import query,query_list
 from mysql_df import query_df
 import time
 from datetime import datetime,timedelta
