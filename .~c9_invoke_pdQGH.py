@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from mysql import query,query_list
+from profile.mysql import query,query_list
 import time
 from datetime import datetime,timedelta
 import numpy as np

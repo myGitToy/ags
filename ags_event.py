@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from Python.RDS.mysql import query,query_list
-from mysql_df import query_df
+from profile.mysql import query,query_list
+from profile.mysql_df import query_df
 import time
 from datetime import datetime,timedelta
 import numpy as np
 from numpy import mean, ptp, var, std
 import pandas as pd
-from setup import *
+from profile.setup import *
 import xlwt
 
 
