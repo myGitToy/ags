@@ -8,6 +8,7 @@ from numpy import mean, ptp, var, std
 import pandas as pd
 from profile.setup import *
 import xlwt
+import os
 
 
 def match():
@@ -123,7 +124,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     df_new.columns=['部门','航班机型排班授权','航段数','二级事件数量','二级事件率','三级事件数量','三级事件率']
     #结果输出至excel
     if flag_csv==1:
-       df_new.to_csv('~/environment/RDS/%s_%s_event_summary.csv' % (start_date,end_date),encoding='utf_8_sig') 
+       df_new.to_csv('~/environment/ags/%s_%s_event_summary.csv' % (start_date,end_date),encoding='utf_8_sig') 
     
     return df_new
     
@@ -143,7 +144,7 @@ def export_ags_event_summary_dep(start_date='',end_date='',headline=''):
         dep_abbr=dep_list737_dict[lst]
         df_dep=df[(df['部门']==dep_name)]
         #print(df_dep)
-        df_dep.to_csv('~/environment/RDS/export/%sQAR_monthly_summary_%s.csv' % (dep_abbr,headline),encoding='utf_8_sig')
+        df_dep.to_csv('%s/ags/export/%sQAR_monthly_summary_%s.csv' % (os.getcwd(),dep_abbr,headline),encoding='utf_8_sig')
         #生成EXCEL格式文件
         #file_path ='~/environment/RDS/QAR_monthly_summary_%s.xlsx' % (headline)
         #writer = pd.ExcelWriter(file_path)
@@ -171,13 +172,13 @@ def export_ags_event_person(start_date='',end_date='',flag_csv=1):
     df_detail.set_index(['event_id'], inplace = True) 
      #结果输出至excel
     if flag_csv==1:
-        df_detail.to_csv('~/environment/RDS/%s_%s_event_person.csv' % (start_date,end_date),encoding='utf_8_sig')
+        df_detail.to_csv('%s/ags/%s_%s_event_person.csv' % (os.getcwd(),start_date,end_date),encoding='utf_8_sig')
 
     
     
     
 #月度事件匹配
-match()
+#match()
 #数据导出
 export_ags_event_summary(start_date='2018-6-1',end_date='2018-6-30')
 export_ags_event_person(start_date='2018-6-1',end_date='2018-6-30')
@@ -185,3 +186,5 @@ export_ags_event_person(start_date='2018-6-1',end_date='2018-6-30')
 #export_ags_event_summary_dep(start_date='2018-1-1',end_date='2018-5-31',headline='201801-05')
 #smtp2=smtp
 #print(smtp2.smtpserver)
+
+print(os.getcwd())
