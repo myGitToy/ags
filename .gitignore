@@ -110,4 +110,9 @@ test.py
 mysql.py
 mysql_df.py
 
+#配置文件
 profile/
+#csv输出文件夹
+export/
+#csv格式文件
+*.csv
