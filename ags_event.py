@@ -128,7 +128,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
        df_new.to_csv('~/environment/ags/%s_%s_event_summary.csv' % (start_date,end_date),encoding='utf_8_sig') 
     
     return df_new
-    
+
 def export_ags_event_summary_dep(start_date='',end_date='',headline=''):
     '''
     [导出事件汇总表 按月按分部]######
@@ -151,8 +151,7 @@ def export_ags_event_summary_dep(start_date='',end_date='',headline=''):
         #writer = pd.ExcelWriter(file_path)
         #df_dep.to_excel(writer,  index=False,encoding='utf-8',sheet_name='Sheet')
         #writer.save()
-        
-    
+
 def export_ags_event_person(start_date='',end_date='',flag_csv=1):
     '''
     [导出事件详细数据 按月]######
