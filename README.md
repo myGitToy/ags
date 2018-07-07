@@ -4,8 +4,11 @@ Caution:Using data from flight schedule and ags snapshot provided by mysql datab
 master branch
 
 #ags_event
+
 match ags event with pilot name
 
 #ags_snapshot
+
 process snapshot and export data to QAR moudle
+
 cloud9 2018/7/7 v003
