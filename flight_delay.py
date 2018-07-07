@@ -55,5 +55,8 @@ def caculate_time():
             query("update flight_delay set 起飞延误='%d',落地延误='%d',飞行时间='%d',valid=1 where key_id='%d'" % (dep_delay,arr_delay,time_min,key_id))         
             #print(row['key_id'],row['航班号'],dep_delay)
     print("结果输出完毕！")
+
+#将新增航班添加到延误数据库
 import_data
+#计算延误时间
 caculate_time()
