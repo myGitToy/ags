@@ -5,6 +5,7 @@ from datetime import datetime,timedelta
 import numpy as np
 from numpy import mean, ptp, var, std
 import pandas as pd
+from  profile.setup import setup_snapshot
 def clean():
     '''
     [数据清洗]######
@@ -148,22 +149,25 @@ def analyze_person_month(name=None,start='',end='',column=''):
 def analyze_person_monthlist(name=None,monthlist='',column=''):
     '''
     [数据统计-列出某人按月分布的某项快照数据全部结果]######
-    函数说明 乔晖 2018/4/22
+    函数说明 创建：乔晖 2018/4/22
+    修改说明：
+    2018/7/7 修改内容：
+    1. 函数由原先的控制台打印输出变为df输出
     [输入Parameters]:
         name:string 姓名 e.g. 乔晖
         monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
         column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
     -------
     [返回值return]：
+    
 
     ''' 
     #打印表头
     #print("姓名,月度,航班量,中位数,Q3值,标准差,变异系数")
     for month in monthlist:
-        a=query("select flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and lnk.姓名='%s'  and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (column,name,month))
-        #print("共%s条有效数据：" % a.rowcount)
+        sql="select flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and lnk.姓名='%s'  and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (column,name,month)
+        a=query(sql)
         if a.rowcount>0:
-            
             result=a.fetchall()
             list=[]
             for row in result:
@@ -171,8 +175,11 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
             #数据库里是字符串，这里必须转换成浮点数
                 list.append(float(row['数据'])) 
             #输出结果
+            Q1=np.percentile(list,25)
             Q2=np.percentile(list,50)
             Q3=np.percentile(list,75)
+            #注：Q90在个人数据中没有意义，不做统计
+            Q90=np.percentile(list,90)
             m_std=std(list,ddof=1)
             m_cv=std(list,ddof=1)/mean(list)
             #print(name,month,Q2,Q3,m_std,m_cv)
@@ -180,13 +187,21 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
         else:
             pass
 #数据清洗
-clean()
+#clean()
 #数据匹配
-match()
-analyze()
-analyze_person_monthlist(name='唐驰',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='虞斌华',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='乔晖',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='刘富元',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='刘长家',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='章磊',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
+#match()
+#analyze()
+
+#数据分析
+#初始化月度列表
+#m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06']
+m_list=['2018-06']
+#初始化落地监控项目
+m_landing=setup_snapshot.event_name_landing
+
+analyze_person_monthlist(name='唐驰',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='虞斌华',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='乔晖',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='刘富元',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='章磊',monthlist=m_list,column='`DIST_LDG (feet)`')
