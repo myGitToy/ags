@@ -7,13 +7,19 @@ def import_data():
     #导入数据
     #通过比较flight_delay和flight_link_chn两张表的数据异同，将[flight_link_chn]中的新增数据导入[flight_delay]
     #新导入的数据默认valid为null，因此在caculate_time函数中，通过检查valid值来确定哪些数据需要计算，哪些已经计算过了
+    sql="insert into flight_delay (key_id) (select A.key_id from flight_link_chn A where not exists (select B.key_id from flight_delay B where B.key_id=A.key_id))"
+    a=query(sql)
+    
+    '''
+    #这里的数据是先前的测试内容，注释掉
     with profile.mysql() as cursor:
         # 左连接查询
         r = cursor.execute("SELECT * FROM flight_link_chn where 航班日期='2017-10-1'")
         result = cursor.fetchall()
-        #print(result)
+        print(result)
         for rows in result:
             print(rows['航班日期'],rows['航程'])
+    '''
             
 def caculate_time():
     ######【计算飞行时间】######
@@ -49,5 +55,5 @@ def caculate_time():
             query("update flight_delay set 起飞延误='%d',落地延误='%d',飞行时间='%d',valid=1 where key_id='%d'" % (dep_delay,arr_delay,time_min,key_id))         
             #print(row['key_id'],row['航班号'],dep_delay)
     print("结果输出完毕！")
-
+import_data
 caculate_time()
