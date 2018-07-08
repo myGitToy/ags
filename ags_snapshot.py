@@ -66,8 +66,17 @@ def match():
             query_list(sql_list)
             print('[%s]success,%s' % (ags_id,count))
         
-def analyze():
+def query2(ac_type='',monthlist='',column=''):
     '''
+    [数据统计-列出某人指定日期间的某项快照数据全部结果]######
+    函数说明 乔晖 2018/4/22
+    [输入Parameters]:
+        ac_type:string 机型 e.g. 可以是机型列表'B737-700','B737-800'
+        start:string 开始日期 format：YYYY/MM/DD
+        end:string 结束日期 format：YYYY/MM/DD
+        column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
+    -------
+    [返回值return]
     [数据统计-]######
     函数说明 乔晖 2018/3/30
     列出每月指定机型的某项快照数据
@@ -146,15 +155,16 @@ def analyze_person_month(name=None,start='',end='',column=''):
           turnoverratio 换手率
           code 股票代码
     '''
-def analyze_person_monthlist(name=None,monthlist='',column=''):
+
+
+def analyze_fleet_monthlist(ac_type='',monthlist='',column=''):
     '''
-    [数据统计-列出某人按月分布的某项快照数据全部结果]######
-    函数说明 创建：乔晖 2018/4/22
+    [数据统计-列出机队按月分布的某项快照数据全部结果]######
+    函数说明 创建：乔晖 2018/7/8
     修改说明：
-    2018/7/7 修改内容：
-    1. 函数由原先的控制台打印输出变为df输出
+
     [输入Parameters]:
-        name:string 姓名 e.g. 乔晖
+        name:string 机队列表
         monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
         column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
     -------
@@ -164,8 +174,10 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
     ''' 
     #打印表头
     #print("姓名,月度,航班量,中位数,Q3值,标准差,变异系数")
+    print("机队,月份,航班快照量,Q1值,中位数,Q3值,标准差,变异系数")
     for month in monthlist:
-        sql="select flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and lnk.姓名='%s'  and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (column,name,month)
+        sql="select distinct(ags.ags_id),flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+        #print(sql)
         a=query(sql)
         if a.rowcount>0:
             result=a.fetchall()
@@ -183,7 +195,8 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
             m_std=std(list,ddof=1)
             m_cv=std(list,ddof=1)/mean(list)
             #print(name,month,Q2,Q3,m_std,m_cv)
-            print("%s,%s,%d,%f,%f,%f,%f" % (name,month,len(list),Q2,Q3,m_std,m_cv))
+            
+            print("%s,%s,%d,%f,%f,%f,%f,%f" % ("B737机队",month,len(list),Q1,Q2,Q3,m_std,m_cv))
         else:
             pass
 #数据清洗
@@ -194,10 +207,18 @@ def analyze_person_monthlist(name=None,monthlist='',column=''):
 
 #数据分析
 #初始化月度列表
-#m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06']
-m_list=['2018-06']
+m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06']
+#m_list=['2018-06']
 #初始化落地监控项目
 m_landing=setup_snapshot.event_name_landing
+
+ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
+
+analyze_fleet_monthlist(ac_type,m_list,'`VRTG_MAX_LD (g)`')
+
+'''
+
+
 
 analyze_person_monthlist(name='唐驰',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='虞斌华',monthlist=m_list,column='`DIST_LDG (feet)`')
@@ -205,3 +226,4 @@ analyze_person_monthlist(name='乔晖',monthlist=m_list,column='`DIST_LDG (feet)
 analyze_person_monthlist(name='刘富元',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='章磊',monthlist=m_list,column='`DIST_LDG (feet)`')
+'''
