@@ -162,7 +162,8 @@ def analyze_fleet_monthlist(ac_type='',monthlist='',column=''):
     [数据统计-列出机队按月分布的某项快照数据全部结果]######
     函数说明 创建：乔晖 2018/7/8
     修改说明：
-
+    2018/7/9
+    1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
     [输入Parameters]:
         name:string 机队列表
         monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
@@ -174,9 +175,9 @@ def analyze_fleet_monthlist(ac_type='',monthlist='',column=''):
     ''' 
     #打印表头
     #print("姓名,月度,航班量,中位数,Q3值,标准差,变异系数")
-    print("机队,月份,航班快照量,Q1值,中位数,Q3值,标准差,变异系数")
+    #print("机队,月份,航班快照量,Q1值,中位数,Q3值,标准差,变异系数")
     for month in monthlist:
-        sql="select distinct(ags.ags_id),flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+        sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
         #print(sql)
         a=query(sql)
         if a.rowcount>0:
