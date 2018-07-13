@@ -158,7 +158,7 @@ def analyze_person_month(name=None,start='',end='',column=''):
     '''
 
 
-def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist=''):
+def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=True):
     '''
     [数据统计-列出机队按月分布的快照数据结果]######
     函数说明 创建：乔晖 2018/7/8
@@ -166,6 +166,7 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist=''):
         ac_type:string 机队列表
         monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
         columnlist:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+        print_head:boolean 是否打印表头，默认为True
     -------
     [返回值return]：
     修改说明：
@@ -178,7 +179,9 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist=''):
     
     ''' 
     #打印表头
-    print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
+    if print_head=True:
+        print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
+    
     for column in columnlist:
         for month in monthlist:
             sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
@@ -318,7 +321,7 @@ m_event_name_sop=setup_snapshot.event_name_sop
 ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 
 #分析机队落地快照
-analyze_fleet_monthlist_df(ac_type,m_list,m_landing)
+analyze_fleet_monthlist_df(ac_type,m_list,m_landing,print_head=True)
 #analyze_fleet_monthlist(ac_type,m_list,['`ROLL_MAX_BL100 (deg)`'])
 #分析机队SOP快照
 #analyze_fleet_monthlist(ac_type,m_list,m_event_name_sop)
