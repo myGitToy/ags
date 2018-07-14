@@ -10,9 +10,9 @@ def import_data():
     #通过检查[flight_link_chn]中的机长、航线机长、一副、二副这四个四段，把相应的机组成员导入到[crew_link]表中
     #新导入的数据默认valid为null，因此在caculate_time函数中，通过检查valid值来确定哪些数据需要计算，哪些已经计算过了
     #######第一步：从[flight_link_chn]中取出所有没有做过导入的数据
-    sql_flight_link_chn_not_imput="select key_id,联线号,机长,航线机长,一副,二副 from flight_link_chn where 机组拆分标识 is null"
-    a=query(sql_flight_link_chn_not_imput)
-    print("本次查询总共返回结果数：",a.rowcount)
+    sql_flight_link_chn_not_input="select key_id,联线号,机长,航线机长,一副,二副 from flight_link_chn where 机组拆分标识 is null"
+    a=query(sql_flight_link_chn_not_input)
+    ##print("本次查询总共返回结果数：",a.rowcount)
     result=a.fetchall()
     for row in result:
         #获取数据
@@ -39,7 +39,7 @@ def import_data():
                 else:
                     cap_flag=0
                 cap_flag_loop=cap_flag_loop+1
-                print("航班连线：%s|姓名：%s，|技术授权：%s,|责任机长标识=%d" % (link_id,name,tech,cap_flag))
+                ##print("航班连线：%s|姓名：%s，|技术授权：%s,|责任机长标识=%d" % (link_id,name,tech,cap_flag))
                 #将sql查询语句加载到多语句列表中
                 sql_list.append("insert into crew_link (key_id,link_id,姓名,机上岗位,技术授权,责任机长标识) values ('%s','%s','%s','机长','%s','%s')" % (key_id,link_id,name,tech,cap_flag))
         else:
@@ -55,7 +55,7 @@ def import_data():
                 tech=n[num-2:num]
                 #航线机长中直接将机长标识置为0
                 cap_flag=0
-                print("航班连线：%s|姓名：%s，|技术授权：%s,|责任机长标识=%d" % (link_id,name,tech,cap_flag))
+                ##print("航班连线：%s|姓名：%s，|技术授权：%s,|责任机长标识=%d" % (link_id,name,tech,cap_flag))
                 #将sql查询语句加载到多语句列表中
                 sql_list.append("insert into crew_link (key_id,link_id,姓名,机上岗位,技术授权,责任机长标识) values ('%s','%s','%s','航线机长','%s','%s')" % (key_id,link_id,name,tech,cap_flag))
         else:

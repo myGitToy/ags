@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from profile.mysql import query,query_list
+from profile.mysql_df import query_df
 import time
 from datetime import datetime,timedelta
 import numpy as np
 from numpy import mean, ptp, var, std
 import pandas as pd
+from  profile.setup import setup_snapshot
 def clean():
     '''
     [数据清洗]######
@@ -65,8 +67,17 @@ def match():
             query_list(sql_list)
             print('[%s]success,%s' % (ags_id,count))
         
-def analyze():
+def query2(ac_type='',monthlist='',column=''):
     '''
+    [数据统计-列出某人指定日期间的某项快照数据全部结果]######
+    函数说明 乔晖 2018/4/22
+    [输入Parameters]:
+        ac_type:string 机型 e.g. 可以是机型列表'B737-700','B737-800'
+        start:string 开始日期 format：YYYY/MM/DD
+        end:string 结束日期 format：YYYY/MM/DD
+        column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
+    -------
+    [返回值return]
     [数据统计-]######
     函数说明 乔晖 2018/3/30
     列出每月指定机型的某项快照数据
@@ -145,48 +156,181 @@ def analyze_person_month(name=None,start='',end='',column=''):
           turnoverratio 换手率
           code 股票代码
     '''
-def analyze_person_monthlist(name=None,monthlist='',column=''):
+
+
+def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist=''):
     '''
-    [数据统计-列出某人按月分布的某项快照数据全部结果]######
-    函数说明 乔晖 2018/4/22
+    [数据统计-列出机队按月分布的快照数据结果]######
+    函数说明 创建：乔晖 2018/7/8
     [输入Parameters]:
-        name:string 姓名 e.g. 乔晖
+        ac_type:string 机队列表
         monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
-        column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
+        columnlist:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
     -------
     [返回值return]：
-
+    修改说明：
+    2018/7/9
+    1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
+    
+    2018/7/12
+    1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
+    2.数据处理过程使用df，理论上速度更快
+    
     ''' 
     #打印表头
-    #print("姓名,月度,航班量,中位数,Q3值,标准差,变异系数")
-    for month in monthlist:
-        a=query("select flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from crew_link lnk,ags_snapshot ags,flight_link_chn flnk where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id and lnk.姓名='%s'  and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (column,name,month))
-        #print("共%s条有效数据：" % a.rowcount)
-        if a.rowcount>0:
-            
-            result=a.fetchall()
-            list=[]
-            for row in result:
-            #data=row['数据']
-            #数据库里是字符串，这里必须转换成浮点数
-                list.append(float(row['数据'])) 
-            #输出结果
-            Q2=np.percentile(list,50)
-            Q3=np.percentile(list,75)
-            m_std=std(list,ddof=1)
-            m_cv=std(list,ddof=1)/mean(list)
-            #print(name,month,Q2,Q3,m_std,m_cv)
-            print("%s,%s,%d,%f,%f,%f,%f" % (name,month,len(list),Q2,Q3,m_std,m_cv))
-        else:
-            pass
+    print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
+    for column in columnlist:
+        for month in monthlist:
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            df=query_df(sql)
+            #数据类型转换 text->float
+            df_float=df['数据'].astype('float')
+            count=df_float.count()
+            Q1=df_float.quantile(0.25)
+            Q2=df_float.quantile(0.50)
+            Q3=df_float.quantile(0.75)
+            #注：Q90在个人数据中没有意义，不做统计
+            Q90=df_float.quantile(0.9)
+            m_std=df_float.std()
+            #m_std=std(list,ddof=1)
+            m_mean=df_float.mean()
+            m_cv=m_std/m_mean
+            print("%s,%s,%s,%d,%f,%f,%f,%f,%f,%f,%f" % ("B737机队",column,month,count,Q1,Q2,Q3,Q90,m_std,m_cv,m_mean))
+            #print(stats1(df_float))
+def stats1(x):
+    return pd.Series([x.count(),x.min(),x.idxmin(),
+               x.quantile(.25),x.median(),
+               x.quantile(.75),x.mean(),
+               x.max(),x.idxmax(),
+               x.mad(),x.var(),
+               x.std(),x.skew(),x.kurt()],
+              index = ['Count','Min','Whicn_Min',
+                       'Q1','Median','Q3','Mean',
+                       'Max','Which_Max','Mad',
+                       'Var','Std','Skew','Kurt'])
+def analyze_fleet_monthlist_df_CL(ac_type='',monthlist='',columnlist=''):
+    '''
+    [数据统计-列出机队按月分布的快照数据结果 【经典分析方法】######
+    函数说明 创建：乔晖 2018/7/8
+    此为第一版统计学分析，使用经典的mysql导出数据列表，将字段信息写入list列表，再通过对list进行统计学分析得到结果
+    后续已被analyze_fleet_monthlist_df替换
+    【本版本已不再维护】
+    
+    [输入Parameters]:
+        ac_type:string 机队列表
+        monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
+        columnlist:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+    -------
+    [返回值return]：
+    修改说明：
+    2018/7/9
+    1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
+    
+    2018/7/12
+    1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
+    
+    ''' 
+    #打印表头
+    print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
+    for column in columnlist:
+        for month in monthlist:
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            #print(sql)
+            a=query(sql)
+            if a.rowcount>0:
+                result=a.fetchall()
+                list=[]
+                for row in result:
+                #data=row['数据']
+                #数据库里是字符串，这里必须转换成浮点数
+                    list.append(float(row['数据'])) 
+                #输出结果
+                print(len(list))
+                Q1=np.percentile(list,25)
+                Q2=np.percentile(list,50)
+                Q3=np.percentile(list,75)
+                #注：Q90在个人数据中没有意义，不做统计
+                Q90=np.percentile(list,90)
+                m_std=std(list,ddof=1)
+                m_mean=mean(list)
+                m_cv=std(list,ddof=1)/m_mean
+                #print(name,month,Q2,Q3,m_std,m_cv)
+                #清空list列表
+                list=[]
+                print("%s,%s,%s,%d,%f,%f,%f,%f,%f,%f,%f" % ("B737机队",column,month,len(list),Q1,Q2,Q3,Q90,m_std,m_cv,m_mean))
+            else:
+                pass
+        pass
+    '''
+    [数据统计-列出机队按月分布的快照数据结果]######
+    函数说明 创建：乔晖 2018/7/8
+
+    
+    [输入Parameters]:
+        ac_type:string 机队列表
+        monthlist:list 要分析的月份列表 如['2018-01','2018-02','2018-03']
+        columnlist:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+    -------
+    [返回值return]：
+    修改说明：
+    2018/7/9
+    1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
+    
+    2018/7/12
+    1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
+    2.数据处理过程使用df，理论上速度更快
+    
+    ''' 
+    #打印表头
+    print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
+    for column in columnlist:
+        for month in monthlist:
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            df=query_df(sql)
+            #数据类型转换 text->float
+            df_float=df['数据'].astype('float')
+            count=df_float.count()
+            Q1=df_float.quantile(0.25)
+            Q2=df_float.quantile(0.50)
+            Q3=df_float.quantile(0.75)
+            #注：Q90在个人数据中没有意义，不做统计
+            Q90=df_float.quantile(0.9)
+            m_std=df_float.std()
+            #m_std=std(list,ddof=1)
+            m_mean=df_float.mean()
+            m_cv=m_std/m_mean
+            print("%s,%s,%s,%d,%f,%f,%f,%f,%f,%f,%f" % ("B737机队",column,month,count,Q1,Q2,Q3,Q90,m_std,m_cv,m_mean))
+
 #数据清洗
-clean()
+#clean()
 #数据匹配
-match()
-analyze()
-analyze_person_monthlist(name='唐驰',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='虞斌华',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='乔晖',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='刘富元',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='刘长家',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='章磊',monthlist=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06'],column='`DIST_LDG (feet)`')
+#match()
+#analyze()
+
+#数据分析
+#初始化月度列表
+m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06']
+#m_list=['2018-06']
+#初始化落地监控项目
+m_landing=setup_snapshot.event_name_landing
+#初始化SOP监控项目
+m_event_name_sop=setup_snapshot.event_name_sop
+ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
+
+#分析机队落地快照
+analyze_fleet_monthlist_df(ac_type,m_list,m_landing)
+#analyze_fleet_monthlist(ac_type,m_list,['`ROLL_MAX_BL100 (deg)`'])
+#分析机队SOP快照
+#analyze_fleet_monthlist(ac_type,m_list,m_event_name_sop)
+'''
+
+
+
+analyze_person_monthlist(name='唐驰',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='虞斌华',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='乔晖',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='刘富元',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_monthlist(name='章磊',monthlist=m_list,column='`DIST_LDG (feet)`')
+'''
+
