@@ -21,7 +21,8 @@ def match():
     包含master caution数据，后续分析中会使用[ags_event_exception]排除无关数据
     ''' 
     #进行匹配，取出所有未进行匹配的数据
-    a=query("select event_id,`Flight Date`,`A/C Tail`,`Flight No`,`Departure Airport`,`Arrival Airport` from ags_event where `A/C Tail` is not null and ags_valid is null")
+    a=query("select event_id,`Flight Date`,`A/C Tail`,`Flight No`,`Departure Airport`,`Arrival Airport` " \
+    "from ags_event where `A/C Tail` is not null and ags_valid is null")
     result=a.fetchall()
     count=0
     for row in result:
@@ -39,7 +40,8 @@ def match():
         ags_datetime=ags_datetime+timedelta(hours = 8)
         #进行mysql语句层面的匹配，规则为取前后三天的航班进行时间间隔相减，如果两者时间间隔小于一小时且数据只有一条，则认为精确匹配
         #sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 1),ags_datetime+timedelta(days =1),ags_reg[2:6])
-        sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 2),ags_datetime+timedelta(days =2),ags_reg[2:6])
+        sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn " \
+        "where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 2),ags_datetime+timedelta(days =2),ags_reg[2:6])
         b=query(sql)
         rst=b.fetchall()
         #print(sql)

@@ -205,7 +205,9 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
     
     for column in columnlist:
         for month in monthlist:
-            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot" \
+            " ags,flight_link_chn flnk where flnk.key_id=ags.key_id and " \
+            "date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
             df=query_df(sql)
             #数据类型转换 text->float
             df_float=df['数据'].astype('float')
@@ -258,7 +260,10 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
     print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
     for column in columnlist:
         for month in monthlist:
-            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from " \
+            "ags_snapshot ags,flight_link_chn flnk "\
+            "where flnk.key_id=ags.key_id and "\
+            "date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
             #print(sql)
             a=query(sql)
             if a.rowcount>0:
@@ -309,7 +314,10 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
     print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
     for column in columnlist:
         for month in monthlist:
-            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot ags,flight_link_chn flnk where flnk.key_id=ags.key_id and date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+            sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 " \
+            "from ags_snapshot ags,flight_link_chn flnk " \
+            "where flnk.key_id=ags.key_id and " \
+            "date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
             df=query_df(sql)
             #数据类型转换 text->float
             df_float=df['数据'].astype('float')
