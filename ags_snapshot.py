@@ -156,7 +156,28 @@ def analyze_person_month(name=None,start='',end='',column=''):
           turnoverratio 换手率
           code 股票代码
     '''
-
+def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
+    '''
+    [数据统计-列出每月航班数和快照数的差值，以筛选QAR源头未导入的航班]######
+    函数说明 乔晖 2018/7/21
+    目前主要用于统计MAX航班
+    [输入Parameters]:
+        max_tail_list:list 机尾号 如'B-1379','B-1381','B-1382','B-1259','B-1260','B-1261'
+        fleet_list:list 机型 如'73M'
+        start:string 开始日期 format：YYYY/MM/DD
+        end:string 结束日期 format：YYYY/MM/DD
+    -------
+    [返回值return]：
+    dataframe 符合条件的航班列表
+    '''
+    sql="select key_id,联线号,航班,航程,航班日期,航班号,机型,机号,起飞机场,降落机场 " \
+    "from flight_link_chn where key_id not in " \
+    "(select key_id from ags_snapshot where `A/C Tail` IN "\
+    "(%s) and key_id is not null) and " \
+    "航班日期 between '%s' and '%s' and 机型='%s' and 航班号 not in ('FMMAX')" % (tail_list,start,end,fleet_list)
+    df=query_df(sql)
+    df.to_csv('~/environment/ags/export/QAR_notmatched.csv',encoding='utf_8_sig')
+    return df
 
 def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=True):
     '''
@@ -179,7 +200,7 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
     
     ''' 
     #打印表头
-    if print_head=True:
+    if print_head==True:
         print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
     
     for column in columnlist:
@@ -211,7 +232,7 @@ def stats1(x):
                        'Q1','Median','Q3','Mean',
                        'Max','Which_Max','Mad',
                        'Var','Std','Skew','Kurt'])
-def analyze_fleet_monthlist_df_CL(ac_type='',monthlist='',columnlist=''):
+def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
     '''
     [数据统计-列出机队按月分布的快照数据结果 【经典分析方法】######
     函数说明 创建：乔晖 2018/7/8
@@ -230,7 +251,7 @@ def analyze_fleet_monthlist_df_CL(ac_type='',monthlist='',columnlist=''):
     1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
     
     2018/7/12
-    1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
+    1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多���快照数据
     
     ''' 
     #打印表头
@@ -325,6 +346,8 @@ analyze_fleet_monthlist_df(ac_type,m_list,m_landing,print_head=True)
 #analyze_fleet_monthlist(ac_type,m_list,['`ROLL_MAX_BL100 (deg)`'])
 #分析机队SOP快照
 #analyze_fleet_monthlist(ac_type,m_list,m_event_name_sop)
+
+
 '''
 
 
