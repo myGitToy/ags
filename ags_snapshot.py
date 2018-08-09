@@ -134,28 +134,52 @@ def query2(ac_type='',monthlist='',column=''):
     #np.percentile(list,95)
     
     #print(np.percentile(a['数据'], 25))
-def analyze_person_month(name=None,start='',end='',column=''):
+def analyze_person_month_df(name=None,month='',parameter_list=''):
     '''
-    [数据统计-列出某人指定日期间的某项快照数据全部结果]######
-    函数说明 乔晖 2018/4/22
+    [数据统计-列出某人某月指定快照数据全部结果]######
+    函数说明 乔晖 2018/8/9
     [输入Parameters]:
-        name:string 姓名 e.g. 乔晖
-        start:string 开始日期 format：YYYY/MM/DD
-        end:string 结束日期 format：YYYY/MM/DD
-        column:string 具体分析某一个快照，如平飘距离 `DIST_LDG (feet)`
+        name:姓名
+        ac_type:string 机队列表
+        month:要分析的月份如'2018-07'
+        parameter_list:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+
     -------
     [返回值return]：
-    DataFrame
-          date 交易日期 (index)
-          open 开盘价
-          high  最高价
-          close 收盘价
-          low 最低价
-          volume 成交量
-          amount 成交额
-          turnoverratio 换手率
-          code 股票代码
-    '''
+    返回本人当月参数的Q0-Q4值
+        修改说明：
+    2018/8/9
+    1、函数初始化
+    2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
+    ''' 
+    #初始化，赋空值
+    df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
+    for column in parameter_list:
+        sql="select flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 " \
+        "from crew_link lnk,ags_snapshot ags,flight_link_chn flnk " \
+        "where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id " \
+        "and lnk.姓名='%s' and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (column,name,month)
+        df=query_df(sql)
+        #数据类型转换 text->float
+        df_float=df['数据'].astype('float')
+        count=df_float.count()
+        Q0=df_float.quantile(0)
+        Q1=df_float.quantile(0.25)
+        Q2=df_float.quantile(0.50)
+        Q3=df_float.quantile(0.75)
+        Q4=df_float.quantile(1.0)
+
+        #将参数写回dataframe
+        df2.at[column,'count']=count
+        df2.at[column,'Q0']=Q0
+        df2.at[column,'Q1']=Q1
+        df2.at[column,'Q2']=Q2
+        df2.at[column,'Q3']=Q3
+        df2.at[column,'Q4']=Q4
+        
+    return df2
+
+    
 def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
     '''
     [数据统计-列出每月航班数和快照数的差值，以筛选QAR源头未导入的航班]######
@@ -190,6 +214,9 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
         print_head:boolean 是否打印表头，默认为True
     -------
     [返回值return]：
+    将结果打印出来，无返回值
+    
+    
     修改说明：
     2018/7/9
     1. 修正sql语句，原先移植版本从事件人员角度分析，会有重复，因此采用distinct消除重复。目前版本删除crew_link表，取消人员查询，因此月度查询速度从40秒优化至4.3秒
@@ -223,6 +250,54 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
             m_cv=m_std/m_mean
             print("%s,%s,%s,%d,%f,%f,%f,%f,%f,%f,%f" % ("B737机队",column,month,count,Q1,Q2,Q3,Q90,m_std,m_cv,m_mean))
             #print(stats1(df_float))
+            
+def analyze_fleet_month_df(ac_type='',month='',parameter_list=''):
+    '''
+    [数据统计-列出机队按月分布的快照数据结果 dataframe格式]######
+    函数说明 创建：乔晖 2018/8/9
+    [输入Parameters]:
+        ac_type:string 机队列表
+        month:要分析的月份如'2018-07'
+        parameter_list:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+
+    -------
+    [返回值return]：
+    返回机队当月指定参数的Q0-Q4值
+    
+    
+    修改说明：
+    2018/8/9
+    1、函数初始化
+    2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
+    ''' 
+    #初始化，赋空值
+    df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
+    for column in parameter_list:
+        sql="select ags.ags_id,flnk.`航班日期`,ags.`From`,ags.`To`,ags.%s as 数据 from ags_snapshot" \
+        " ags,flight_link_chn flnk where flnk.key_id=ags.key_id and " \
+        "date_format(flnk.航班日期,'%%Y-%%m')='%s' and flnk.机型 IN (%s)" % (column,month,ac_type)
+        df=query_df(sql)
+        #数据类型转换 text->float
+        df_float=df['数据'].astype('float')
+        count=df_float.count()
+        Q0=df_float.quantile(0)
+        Q1=df_float.quantile(0.25)
+        Q2=df_float.quantile(0.50)
+        Q3=df_float.quantile(0.75)
+        Q4=df_float.quantile(1.0)
+
+        #将参数写回dataframe
+        df2.at[column,'count']=count
+        df2.at[column,'Q0']=Q0
+        df2.at[column,'Q1']=Q1
+        df2.at[column,'Q2']=Q2
+        df2.at[column,'Q3']=Q3
+        df2.at[column,'Q4']=Q4
+        
+    return df2
+
+
+            
 def stats1(x):
     return pd.Series([x.count(),x.min(),x.idxmin(),
                x.quantile(.25),x.median(),
@@ -341,7 +416,7 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
 
 #数据分析
 #初始化月度列表
-m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06']
+m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06','2018-07']
 #m_list=['2018-06']
 #初始化落地监控项目
 m_landing=setup_snapshot.event_name_landing
@@ -350,11 +425,25 @@ m_event_name_sop=setup_snapshot.event_name_sop
 ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 
 #分析机队落地快照
-analyze_fleet_monthlist_df(ac_type,m_list,m_landing,print_head=True)
+#analyze_fleet_monthlist_df(ac_type,m_list,m_landing,print_head=True)
+
+#analyze_fleet_month_dfdf(ac_type,'2018-07',m_landing)
+#print(analyze_person_month_df('乔晖','2018-07',m_landing))
+
 #analyze_fleet_monthlist(ac_type,m_list,['`ROLL_MAX_BL100 (deg)`'])
 #分析机队SOP快照
 #analyze_fleet_monthlist(ac_type,m_list,m_event_name_sop)
 
+
+text_msg="乔晖，您好：\n"
+text_msg=text_msg+"您的2018-07月QAR飞行品质报告已出炉\n\n"
+text_msg=text_msg+"1.【快照数据】\n"
+text_msg=text_msg+"1.1 本月平飘距离数据如下（单位：米）：\n"
+text_msg=text_msg+"    本人数值：中位数：%s；最大值：%s；最小值：%s；\n" % (800,900,1000)
+text_msg=text_msg+"    机队参考值：中位数：900；机队25%-75%区间：750-850；\n"
+
+
+print(text_msg)
 
 '''
 

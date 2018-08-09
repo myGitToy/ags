@@ -2,17 +2,17 @@
 #本模块专门进行数据初始化工作
 #from ags_event import match,export_ags_event_summary,export_ags_event_person
 import ags_event
-import ags_snapshot
+from ags_snapshot import match,clean
 import flight_delay
 import crew_link_line
 
 #####定义
 #开始日期
-start='2018-5-1'
+start='2018-7-1'
 #结束日期
-end='2018-5-30'
+end='2018-7-31'
 #max机尾号
-max_tail_list="'B-1379','B-1381','B-1382','B-1259','B-1260','B-1261'"
+max_tail_list="'B-1379','B-1381','B-1382','B-1259','B-1260','B-1261','B-1263'"
 #MAX机型
 max_type='73M'
 
