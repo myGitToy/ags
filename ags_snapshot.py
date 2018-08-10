@@ -435,15 +435,6 @@ ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 #analyze_fleet_monthlist(ac_type,m_list,m_event_name_sop)
 
 
-text_msg="乔晖，您好：\n"
-text_msg=text_msg+"您的2018-07月QAR飞行品质报告已出炉\n\n"
-text_msg=text_msg+"1.【快照数据】\n"
-text_msg=text_msg+"1.1 本月平飘距离数据如下（单位：米）：\n"
-text_msg=text_msg+"    本人数值：中位数：%s；最大值：%s；最小值：%s；\n" % (800,900,1000)
-text_msg=text_msg+"    机队参考值：中位数：900；机队25%-75%区间：750-850；\n"
-
-
-print(text_msg)
 
 '''
 
