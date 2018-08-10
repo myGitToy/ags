@@ -123,8 +123,10 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #按照索引[日期]进行排序，升序
     #print(df_new.sort_index(ascending = True))
     #重命名列
-    print(df_new)
+    
     df_new.columns=['部门','航班机型排班授权','航段数','二级事件数量','二级事件率','三级事件数量','三级事件率']
+    #df_new=df_new.rename(index={1: '姓名'})
+    #print(df_new)
     #结果输出至excel
     if flag_csv==1:
        df_new.to_csv('~/environment/ags/%s_%s_event_summary.csv' % (start_date,end_date),encoding='utf_8_sig') 
