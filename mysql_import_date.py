@@ -2,7 +2,7 @@
 #本模块专门进行数据初始化工作
 #from ags_event import match,export_ags_event_summary,export_ags_event_person
 import ags_event
-from ags_snapshot import match,clean
+import ags_snapshot
 import flight_delay
 import crew_link_line
 

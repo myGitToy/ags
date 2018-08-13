@@ -18,7 +18,8 @@ m_end_date='2018-7-31'
 m_parameters=['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`','`ROLL_MAX_BL100 (deg)`','`PITCH_LANDING (deg)`','`PITCH_LIFTOFF (deg)`','`PITCH_RATAVGTO (deg/s)`']
 ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 
-
+df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=1)
+df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters)
 
 def report_fleet_v1():
     '''
@@ -40,9 +41,9 @@ def report_fleet_v1():
     idx = df_event.index
     name_list = idx.tolist() 
     for name in name_list:
-        report_person_v1(name,m_month,df_event,df_fleet)
+        report_person_v1(name,m_month)
 
-def report_person_v1(name=None,month='',df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0),df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters)):
+def report_person_v1(name=None,month=''):
     '''
     [数据报表-输出数据报表（个人）  TXT格式]######
     函数说明 创建：乔晖 2018/8/10
@@ -55,7 +56,7 @@ def report_person_v1(name=None,month='',df_event=export_ags_event_summary(start_
     [返回值return]：
     返回机队当月指定参数的Q0-Q4值
     
-    
+    #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0),df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters)
     修改说明：
     
     '''
@@ -127,8 +128,8 @@ def report_person_v1(name=None,month='',df_event=export_ags_event_summary(start_
     text_msg=text_msg+'            本人数值：中位数：%s %s；最大值：%s；最小值：%s；\n' % (round(df_person.at[m_loc_x_name,'Q2'],3),m_arrow,round(df_person.at[m_loc_x_name,'Q4'],3),round(df_person.at[m_loc_x_name,'Q0'],3))
     text_msg=text_msg+'            机队参考值：中位数：%s；机队25%%至75%%区间：%s-%s；\n' % (round(df_fleet.at[m_loc_x_name,'Q2'],3),round(df_person.at[m_loc_x_name,'Q1'],3),round(df_person.at[m_loc_x_name,'Q3'],3))
     text_msg=text_msg+'\n'  
-    #print(text_msg)
-    print('%s 已输出完毕' % name)
+    print(text_msg)
+    #print('%s 已输出完毕' % name)
     return text_msg
 
 
@@ -148,5 +149,5 @@ def arrow(person_q2='',fleet_q1='',fleet_q3=''):
         return ''
         
         
-#report_person_v1('丁润',m_month)
-report_fleet_v1()
+report_person_v1('虞斌华',m_month)
+#report_fleet_v1()

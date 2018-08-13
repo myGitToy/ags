@@ -91,7 +91,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
 
     ##########姓名 二级事件数量
     sql="select lnk.姓名,count(lnk.姓名) as 二级事件数量 " \
-        "from ags_event ags,crew_link lnk,ags_event_exception exp " \
+        "from ags_event ags,crew_link lnk " \
         "where lnk.key_id=ags.key_id and ags.`Severity Class No`=2 " \
         "and ags.`Flight Date` between '%s' and '%s'" \
         "and ags.`Event Short Name` not in (select `Event Short Name` from ags_event_exception where `Severity Class No`=2) " \
@@ -100,11 +100,11 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #重构索引
     df_event2.set_index(['姓名'], inplace = True) 
     #获取二级事件率
-    df_event2['二级事件率']=df_event2['二级事件数量']/df_count['航段数']
+    df_event2['二级事件率']=round(df_event2['二级事件数量']/df_count['航段数'],5)
 
     ##########姓名 三级事件数量
     sql="select lnk.姓名,count(lnk.姓名) as 三级事件数量 " \
-        "from ags_event ags,crew_link lnk,ags_event_exception exp " \
+        "from ags_event ags,crew_link lnk " \
         "where lnk.key_id=ags.key_id and ags.`Severity Class No`=3 " \
         "and ags.`Flight Date` between '%s' and '%s'" \
         "and ags.`Event Short Name` not in (select `Event Short Name` from ags_event_exception where `Severity Class No`=3) " \
@@ -113,7 +113,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #重构索引
     df_event3.set_index(['姓名'], inplace = True) 
     #获取二级事件率
-    df_event3['三级事件率']=df_event3['三级事件数量']/df_count['航段数']
+    df_event3['三级事件率']=round(df_event3['三级事件数量']/df_count['航段数'],5)
     
     #两个dataframe合并
     df_new=pd.concat([df_count,df_event2,df_event3], axis=1)
