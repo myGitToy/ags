@@ -7,6 +7,7 @@ import numpy as np
 from numpy import mean, ptp, var, std
 import pandas as pd
 from  profile.setup import setup_snapshot
+#from ags_mail import mail
 def clean():
     '''
     [数据清洗]######
@@ -416,7 +417,7 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
 
 #数据分析
 #初始化月度列表
-m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06','2018-07']
+m_list=['2018-01','2018-02','2018-03','2018-04','2018-05','2018-06','2018-07','2018-08']
 #m_list=['2018-06']
 #初始化落地监控项目
 m_landing=setup_snapshot.event_name_landing
@@ -444,7 +445,10 @@ analyze_person_monthlist(name='唐驰',monthlist=m_list,column='`DIST_LDG (feet)
 analyze_person_monthlist(name='虞斌华',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='乔晖',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='刘富元',monthlist=m_list,column='`DIST_LDG (feet)`')
-analyze_person_monthlist(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
+analyze_person_month_df(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='章磊',monthlist=m_list,column='`DIST_LDG (feet)`')
 '''
-
+#b=mail(name='乔晖',month='2018-08',email='g.huiqiao@aliyun.com',start_date='2018-08-01',end_date='2018-08-31')
+#print(b.username)
+#print(b.send_test())
+#b.send()

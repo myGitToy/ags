@@ -12,9 +12,9 @@ from ags_event import export_ags_event_summary
 
 
 #参数初始化
-m_month='2018-07'
-m_start_date='2018-7-1'
-m_end_date='2018-7-31'
+m_month='2018-08'
+m_start_date='2018-8-1'
+m_end_date='2018-8-31'
 m_parameters=['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`','`ROLL_MAX_BL100 (deg)`','`PITCH_LANDING (deg)`','`PITCH_LIFTOFF (deg)`','`PITCH_RATAVGTO (deg/s)`']
 ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 
@@ -149,5 +149,5 @@ def arrow(person_q2='',fleet_q1='',fleet_q3=''):
         return ''
         
         
-report_person_v1('虞斌华',m_month)
+#report_person_v1('唐驰',m_month)
 #report_fleet_v1()
