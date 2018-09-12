@@ -21,7 +21,8 @@ def match():
     包含master caution数据，后续分析中会使用[ags_event_exception]排除无关数据
     ''' 
     #进行匹配，取出所有未进行匹配的数据
-    a=query("select event_id,`Flight Date`,`A/C Tail`,`Flight No`,`Departure Airport`,`Arrival Airport` from ags_event where `A/C Tail` is not null and ags_valid is null")
+    a=query("select event_id,`Flight Date`,`A/C Tail`,`Flight No`,`Departure Airport`,`Arrival Airport` " \
+    "from ags_event where `A/C Tail` is not null and ags_valid is null")
     result=a.fetchall()
     count=0
     for row in result:
@@ -39,7 +40,8 @@ def match():
         ags_datetime=ags_datetime+timedelta(hours = 8)
         #进行mysql语句层面的匹配，规则为取前后三天的航班进行时间间隔相减，如果两者时间间隔小于一小时且数据只有一条，则认为精确匹配
         #sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 1),ags_datetime+timedelta(days =1),ags_reg[2:6])
-        sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 2),ags_datetime+timedelta(days =2),ags_reg[2:6])
+        sql="select key_id,航班号,timediff('%s' ,实飞) as 时间间隔 from flight_link_chn " \
+        "where 航班日期 between '%s' and '%s' and 机号='%s' having 时间间隔<='-01:30:00'" % (ags_datetime,ags_datetime-timedelta(days = 2),ags_datetime+timedelta(days =2),ags_reg[2:6])
         b=query(sql)
         rst=b.fetchall()
         #print(sql)
@@ -89,7 +91,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
 
     ##########姓名 二级事件数量
     sql="select lnk.姓名,count(lnk.姓名) as 二级事件数量 " \
-        "from ags_event ags,crew_link lnk,ags_event_exception exp " \
+        "from ags_event ags,crew_link lnk " \
         "where lnk.key_id=ags.key_id and ags.`Severity Class No`=2 " \
         "and ags.`Flight Date` between '%s' and '%s'" \
         "and ags.`Event Short Name` not in (select `Event Short Name` from ags_event_exception where `Severity Class No`=2) " \
@@ -98,11 +100,11 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #重构索引
     df_event2.set_index(['姓名'], inplace = True) 
     #获取二级事件率
-    df_event2['二级事件率']=df_event2['二级事件数量']/df_count['航段数']
+    df_event2['二级事件率']=round(df_event2['二级事件数量']/df_count['航段数'],5)
 
     ##########姓名 三级事件数量
     sql="select lnk.姓名,count(lnk.姓名) as 三级事件数量 " \
-        "from ags_event ags,crew_link lnk,ags_event_exception exp " \
+        "from ags_event ags,crew_link lnk " \
         "where lnk.key_id=ags.key_id and ags.`Severity Class No`=3 " \
         "and ags.`Flight Date` between '%s' and '%s'" \
         "and ags.`Event Short Name` not in (select `Event Short Name` from ags_event_exception where `Severity Class No`=3) " \
@@ -111,7 +113,7 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #重构索引
     df_event3.set_index(['姓名'], inplace = True) 
     #获取二级事件率
-    df_event3['三级事件率']=df_event3['三级事件数量']/df_count['航段数']
+    df_event3['三级事件率']=round(df_event3['三级事件数量']/df_count['航段数'],5)
     
     #两个dataframe合并
     df_new=pd.concat([df_count,df_event2,df_event3], axis=1)
@@ -121,8 +123,10 @@ def export_ags_event_summary(start_date='',end_date='',flag_csv=1):
     #按照索引[日期]进行排序，升序
     #print(df_new.sort_index(ascending = True))
     #重命名列
-    print(df_new)
+    
     df_new.columns=['部门','航班机型排班授权','航段数','二级事件数量','二级事件率','三级事件数量','三级事件率']
+    #df_new=df_new.rename(index={1: '姓名'})
+    #print(df_new)
     #结果输出至excel
     if flag_csv==1:
        df_new.to_csv('~/environment/ags/%s_%s_event_summary.csv' % (start_date,end_date),encoding='utf_8_sig') 
