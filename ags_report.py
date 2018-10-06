@@ -8,6 +8,9 @@
         import ags_report as report   #报告生成模块引用
     初始化：
         每月邮件发送列表初始化： report.mail_init(month)
+        该初始化模块已并入mysql_import_data，由月初一次性执行
+    群发邮件：
+        report.send()
     
 重要事项：
     每次导入ags_mail_list后写入month，如果需要发送对应的邮件，还需要对setup中的初始条件进行相应的更改，内容包括month/start_date/end_date，否则邮件发送内容会与实际想发送的内容不符合
@@ -88,8 +91,7 @@ m_start_date=setup.start_date
 m_end_date=setup.end_date
 m_parameters=['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`','`ROLL_MAX_BL100 (deg)`','`PITCH_LANDING (deg)`','`PITCH_LIFTOFF (deg)`','`PITCH_RATAVGTO (deg/s)`']
 ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
-df_event=None
-df_fleet=None
+
 
 
 def report_fleet_v1():
@@ -115,7 +117,7 @@ def report_fleet_v1():
     for name in name_list:
         report_person_v1(name,m_month)
 
-def report_person_v1(name=None,month=''):
+def report_person_v1(name=None,month=None,df_event=None,df_fleet=None):
     """
     [数据报表-输出数据报表（个人）  TXT格式]######
     函数说明 创建：乔晖 2018/8/10
@@ -128,10 +130,13 @@ def report_person_v1(name=None,month=''):
     [返回值return]：
         返回机队当月指定参数的Q0-Q4值
     
-    #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0),df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters)
+    df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0),df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters)
     修改说明：
     
     """
+    #获取机队数值
+    
+    
     #获取个人数值
     df_person=analyze_person_month_df(name,month,m_parameters)
     #NA值处理
@@ -336,13 +341,12 @@ def send(max_mail_list=200):
         start_date=row['start_date']
         end_date=row['end_date']
         #整合字符串
-        text_msg=report_person_v1(name,month)
-        #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
-        #df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
+        df_event=export_ags_event_summary(start_date=start_date,end_date=end_date,flag_csv=0)
+        df_fleet=analyze_fleet_month_df(ac_type,month,m_parameters) 
+        text_msg=report_person_v1(name=name,month=month,df_event=df_event,df_fleet=df_fleet)
+
         #发送邮件
         ml=mail(name,month,email,start_date,end_date,text_msg)
-        rst=ml.send()
-        '''
         rst=ml.send()
         if rst==True:
             #邮件发送成功
@@ -356,7 +360,6 @@ def send(max_mail_list=200):
         elif rst==False:
             #邮件发送失败
             logging.error("邮件发送失败：send_id号：%d；姓名：%s；邮箱：%s" % (send_id,name,mail))
-        '''    
     
 
 def mail_init(month=None,start_date=None,end_date=None):
@@ -414,7 +417,11 @@ def __init__(self,month=None,start_date=None,end_date=None):
    
     
 if __name__ == '__main__':
-    df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
-    df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
+    '''
+    获取单人QAR信息
+    #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
+    #df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
     #report_person_v1('张颢',m_month)
+    '''
+    #群发邮件
     send(rpt.max_mail_list)

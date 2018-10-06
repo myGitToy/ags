@@ -76,9 +76,7 @@ class mail(object):
         #rcptto = ['***', '***']
         #self.rcptto ='g.huiqiao@aliyun.com'
         print("初始化%s" % self.rcptto)
-    def send_test(self):
-        print(self.rcptto)
-    
+
     def send(self):
         """
         [发送邮件(SMTP核心代码)]######
