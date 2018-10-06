@@ -73,8 +73,11 @@ from ags_snapshot import analyze_fleet_month_df,analyze_person_month_df
 from ags_event import export_ags_event_summary
 from profile.setup import setup_smtp as setup
 from profile.setup import setup_dep_name as dep
+from profile.setup import setup_report as rpt
 from datetime import datetime,timedelta
 from numpy import mean, ptp, var, std
+#import ags_mail as mail
+from ags_mail import mail as mail
 #from  profile.setup import setup_snapshot
 
 #参数初始化
@@ -196,7 +199,7 @@ def report_person_v1(name=None,month=''):
     text_msg=text_msg+'            本人数值：中位数：%s %s；最大值：%s；最小值：%s；\n' % (round(df_person.at[m_loc_x_name,'Q2'],3),m_arrow,round(df_person.at[m_loc_x_name,'Q4'],3),round(df_person.at[m_loc_x_name,'Q0'],3))
     text_msg=text_msg+'            机队参考值：中位数：%s；机队25%%至75%%区间：%s-%s；\n' % (round(df_fleet.at[m_loc_x_name,'Q2'],3),round(df_person.at[m_loc_x_name,'Q1'],3),round(df_person.at[m_loc_x_name,'Q3'],3))
     text_msg=text_msg+'\n'  
-    print(text_msg)
+    #print(text_msg)
     #print('%s 已输出完毕' % name)
     return text_msg
 
@@ -307,22 +310,54 @@ def report_person_detail(self,filter_event_level=3,filter_event_valid='valid'):
     """
     pass
 
-def get_mail_list(self,dep_name_list=None,flag_valid=1):
+def send(max_mail_list=200):
     """
-    [得到应发送的邮件列表]######
-    函数说明 创建：乔晖 2018/9/22
+    [循环发送邮件]######
+    函数说明 创建：乔晖 2018/10/6
     [输入Parameters]:
-        dep_name_list:list 需要抓取的分部列表，该信息可从setup.setup_dep_name获取。
-                            比如要获取737全部分部，则:
-                            from profile.setup import setup_dep_name as dep
-                            dep.dep_list737
-        flag_valid:boolean 邮件列表有效性，默认为有效 1
-        
+        max_mail_list:int 最大发送数量
     -------
     [返回值return]：
-        返回邮件列表 包含工号 姓名 分部 邮箱列表 手机号码
+        
     """    
-    pass
+    ###获取邮件列表
+    sql="select log.send_id,list.email,log.month,log.name,log.start_date,log.end_date " \
+    "from ags_mail_log log , ags_mail_list list " \
+    "where log.mail_id=list.mail_id and log.status=0 LIMIT %d" % (max_mail_list)
+    a=query(sql)
+    result=a.fetchall()
+    ###获取机队信息
+    for row in result:
+        #获取数据
+        send_id=row['send_id']
+        name=row['name']
+        email=row['email']
+        month=row['month']
+        start_date=row['start_date']
+        end_date=row['end_date']
+        #整合字符串
+        text_msg=report_person_v1(name,month)
+        #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
+        #df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
+        #发送邮件
+        ml=mail(name,month,email,start_date,end_date,text_msg)
+        rst=ml.send()
+        '''
+        rst=ml.send()
+        if rst==True:
+            #邮件发送成功
+            logging.debug("%s的%s邮件已发送至%s邮箱" % (name,month,email))
+            #发送列表修改为已发送
+            sql2="update ags_mail_log set status=1 where send_id=%d" % (send_id)
+            b=query(sql2)
+            if b==False:
+                logging.debug("修改已发送邮件失败,send_id号%d" % (send_id))
+            
+        elif rst==False:
+            #邮件发送失败
+            logging.error("邮件发送失败：send_id号：%d；姓名：%s；邮箱：%s" % (send_id,name,mail))
+        '''    
+    
 
 def mail_init(month=None,start_date=None,end_date=None):
     """
@@ -334,21 +369,23 @@ def mail_init(month=None,start_date=None,end_date=None):
     
     [输入Parameters]:
     month string 需要导入列表的月份 如2018-10
+    start_date string 开始日期
+    end_date 结束日期
+    注：开始和结束日期用于定位数据采集的时间段，和发送日期无关
     -------
     [返回值return]：
-        返回
+        True False
     """
     #第一步：校验是否有重复数据
     sql_duplicate=query("select count(send_id) as cnt from ags_mail_log where month='%s'" % (month))
     result=sql_duplicate.fetchone()
     if result['cnt']==0:
         #返回结果为0，进行导入操作
-        logging.debug("准备开始导入~")
         sql="insert into ags_mail_log  (mail_id,month,name,start_date,end_date,status) " \
         "select mail_id,'%s',name,'%s','%s',0 " \
         "from ags_mail_list where valid=1"  % (month,start_date,end_date)
         sql_import=query(sql)
-        logging.debug("导入完成")
+        logging.debug("%s邮件列表导入完成" % (month))
         return True
     else:
         #返回结果不为0，忽略导入操作
@@ -379,6 +416,5 @@ def __init__(self,month=None,start_date=None,end_date=None):
 if __name__ == '__main__':
     df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
     df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
-    report_person_v1('张颢',m_month)
-
-    #report_fleet_v1()
+    #report_person_v1('张颢',m_month)
+    send(rpt.max_mail_list)
