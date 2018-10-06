@@ -3,6 +3,8 @@
 文档说明【类】：
     邮件处理模块，用于发送QAR品质报告
     主要完成事件匹配和事件数据输出，为QAR分析提供csv格式的raw_data
+    --->smtp模式默认为25或80端口，实测建议使用80端口，25并不稳定
+    --->ssl模式请使用465端口
     引用规范：请使用下列语句
         from  ags_mail import mail as mail #主模块引用
         from profile.setup import setup_smtp as setup   #邮件配置文件引用
@@ -135,9 +137,9 @@ class mail(object):
             #python 2.7以上版本，若需要使用SSL，可以这样创建client
             #client = smtplib.SMTP_SSL()
             #SMTP普通端口为25或80
-            client.connect('smtpdm.aliyun.com', 25)
+            client.connect('smtpdm.aliyun.com', 80)
             #开启DEBUG模式 0:静默 1:详细信息
-            client.set_debuglevel(1)
+            client.set_debuglevel(0)
             client.login(self.username, self.password)
             #发件人和认证地址必须一致
             #备注：若想取到DATA命令返回值,可参考smtplib的sendmaili封装方法:
