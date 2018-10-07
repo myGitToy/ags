@@ -9,21 +9,21 @@ import pandas as pd
 from  profile.setup import setup_snapshot
 #from ags_mail import mail
 def clean():
-    '''
+    """
     [数据清洗]######
     函数说明 乔晖 2018/3/30
     通过检查[ags_snapshot]
     
-    '''
+    """
     #去除非有效数据 2018/4/3 增加双条件判断，预估每月可以排除200条左右的非有效数据
     a=query("update ags_snapshot set ags_valid=0,match_mode=0 where (`From` is null and `To` is null) or (`From` ='' and `To` ='')")
     print("共删除%d条非有效数据：" % a.rowcount)
 
 def match():
-    '''
+    """
     [数据匹配]######
     函数说明 乔晖 2018/4/2
-    ''' 
+    """ 
     #进行匹配，取出所有未进行匹配的数据
     a=query("select ags_id,`Date & Time`,`A/C Tail`,`Flight No`,`From`,`To` from ags_snapshot where  `A/C Tail` is not null and ags_valid is null")
     result=a.fetchall()
@@ -69,7 +69,7 @@ def match():
             print('[%s]success,%s' % (ags_id,count))
         
 def query2(ac_type='',monthlist='',column=''):
-    '''
+    """
     [数据统计-列出某人指定日期间的某项快照数据全部结果]######
     函数说明 乔晖 2018/4/22
     [输入Parameters]:
@@ -83,7 +83,7 @@ def query2(ac_type='',monthlist='',column=''):
     函数说明 乔晖 2018/3/30
     列出每月指定机型的某项快照数据
     
-    '''
+    """
     #查询737机型某月单项数据
     #B737=query("SELECT lnk.key_id,lnk.航班日期,ags.`RETARD_ALT (FT)` as 数据 FROM `flight_link_chn` lnk,`ags_snapshot` ags where ags.key_id=lnk.key_id and lnk.航班日期 between '2018/1/1' and '2018/3/31' and lnk.机型 IN ('73M','73L','73H','738','73E','737','73G','73A')")
     B737=query("SELECT lnk.key_id,lnk.航班日期,ags.`VRTG_MAX_LD (g)` as 数据 FROM `flight_link_chn` lnk,`ags_snapshot` ags where ags.key_id=lnk.key_id and lnk.航班日期 between '2018/1/1' and '2018/1/31' and lnk.机型 IN ('73L','73H','738','73E','737','73G','73A')")
@@ -136,7 +136,7 @@ def query2(ac_type='',monthlist='',column=''):
     
     #print(np.percentile(a['数据'], 25))
 def analyze_person_month_df(name=None,month='',parameter_list=''):
-    '''
+    """
     [数据统计-列出某人某月指定快照数据全部结果]######
     函数说明 乔晖 2018/8/9
     [输入Parameters]:
@@ -152,7 +152,7 @@ def analyze_person_month_df(name=None,month='',parameter_list=''):
     2018/8/9
     1、函数初始化
     2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
-    ''' 
+    """ 
     #初始化，赋空值
     df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
     for column in parameter_list:
@@ -182,7 +182,7 @@ def analyze_person_month_df(name=None,month='',parameter_list=''):
 
     
 def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
-    '''
+    """
     [数据统计-列出每月航班数和快照数的差值，以筛选QAR源头未导入的航班]######
     函数说明 乔晖 2018/7/21
     目前主要用于统计MAX航班
@@ -194,7 +194,7 @@ def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
     -------
     [返回值return]：
     dataframe 符合条件的航班列表
-    '''
+    """
     sql="select key_id,联线号,航班,航程,航班日期,航班号,机型,机号,起飞机场,降落机场 " \
     "from flight_link_chn where key_id not in " \
     "(select key_id from ags_snapshot where `A/C Tail` IN "\
@@ -205,7 +205,7 @@ def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
     return df
 
 def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=True):
-    '''
+    """
     [数据统计-列出机队按月分布的快照数据结果]######
     函数说明 创建：乔晖 2018/7/8
     [输入Parameters]:
@@ -226,7 +226,7 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
     1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
     2.数据处理过程使用df，理论上速度更快
     
-    ''' 
+    """ 
     #打印表头
     if print_head==True:
         print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
@@ -253,7 +253,7 @@ def analyze_fleet_monthlist_df(ac_type='',monthlist='',columnlist='',print_head=
             #print(stats1(df_float))
             
 def analyze_fleet_month_df(ac_type='',month='',parameter_list=''):
-    '''
+    """
     [数据统计-列出机队按月分布的快照数据结果 dataframe格式]######
     函数说明 创建：乔晖 2018/8/9
     [输入Parameters]:
@@ -270,7 +270,7 @@ def analyze_fleet_month_df(ac_type='',month='',parameter_list=''):
     2018/8/9
     1、函数初始化
     2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
-    ''' 
+    """ 
     #初始化，赋空值
     df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
     for column in parameter_list:
@@ -311,7 +311,7 @@ def stats1(x):
                        'Max','Which_Max','Mad',
                        'Var','Std','Skew','Kurt'])
 def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
-    '''
+    """
     [数据统计-列出机队按月分布的快照数据结果 【经典分析方法】######
     函数说明 创建：乔晖 2018/7/8
     此为第一版统计学分析，使用经典的mysql导出数据列表，将字段信息写入list列表，再通过对list进行统计学分析得到结果
@@ -331,7 +331,7 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
     2018/7/12
     1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多���快照数据
     
-    ''' 
+    """ 
     #打印表头
     print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
     for column in columnlist:
@@ -366,7 +366,7 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
             else:
                 pass
         pass
-    '''
+    """
     [数据统计-列出机队按月分布的快照数据结果]######
     函数说明 创建：乔晖 2018/7/8
 
@@ -385,7 +385,7 @@ def analyze_fleet_monthlist_CL(ac_type='',monthlist='',columnlist=''):
     1.修改输入函数，原先一次只能处理一种快照数据，现输入项为快照列表，可以输入多种快照数据
     2.数据处理过程使用df，理论上速度更快
     
-    ''' 
+    """ 
     #打印表头
     print("机队,字段,月份,航班快照量,Q1值,中位数,Q3值,Q90,标准差,变异系数,平均值")
     for column in columnlist:
@@ -437,7 +437,7 @@ ac_type="'73M','73L','73H','738','73E','737','73G','73A'"
 
 
 
-'''
+"""
 
 
 
@@ -447,8 +447,14 @@ analyze_person_monthlist(name='乔晖',monthlist=m_list,column='`DIST_LDG (feet)
 analyze_person_monthlist(name='刘富元',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_month_df(name='刘长家',monthlist=m_list,column='`DIST_LDG (feet)`')
 analyze_person_monthlist(name='章磊',monthlist=m_list,column='`DIST_LDG (feet)`')
-'''
+"""
 #b=mail(name='乔晖',month='2018-08',email='g.huiqiao@aliyun.com',start_date='2018-08-01',end_date='2018-08-31')
 #print(b.username)
 #print(b.send_test())
 #b.send()
+
+def __init__(self):
+    pass
+
+if __name__ == '__main__':
+    pass

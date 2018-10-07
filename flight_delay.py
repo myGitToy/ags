@@ -10,7 +10,7 @@ def import_data():
     sql="insert into flight_delay (key_id) (select A.key_id from flight_link_chn A where not exists (select B.key_id from flight_delay B where B.key_id=A.key_id))"
     a=query(sql)
     
-    '''
+    """
     #这里的数据是先前的测试内容，注释掉
     with profile.mysql() as cursor:
         # 左连接查询
@@ -19,7 +19,7 @@ def import_data():
         print(result)
         for rows in result:
             print(rows['航班日期'],rows['航程'])
-    '''
+    """
             
 def caculate_time():
     ######【计算飞行时间】######
