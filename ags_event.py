@@ -242,6 +242,7 @@ def export_ags_event_maintenance(start_date='',end_date='',flag_csv=1):
         "from ags_event ags,crew_link lnk " \
         "where lnk.key_id = ags.key_id and ags.`Event Short Name` in ('SET ALT AND VHF KEY' ,  'thr spd diff' , 'SAL Heading large') and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
     df_detail=query_df(sql)
+    
     #重构索引
     df_detail.set_index(['event_id'], inplace = True) 
      #结果输出至excel
