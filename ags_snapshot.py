@@ -179,8 +179,92 @@ def analyze_person_month_df(name=None,month='',parameter_list=''):
         df2.at[column,'Q4']=Q4
         
     return df2
-
     
+def analyze_person_statics(month=None,parameter=None):
+    """
+    [数据统计-列出某月指定快照数据全部结果 汇总后进行统计学描述分析]######
+    函数说明 乔晖 2018/12/21
+    [输入Parameters]:
+        month:要分析的月份如'2018-07'
+        parameter_list:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+
+    -------
+    [返回值return]：
+    返回本人当月参数的Q0-Q4值
+        修改说明：
+    2018/12/21
+    1、函数初始化
+    2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
+    """ 
+    #初始化，赋空值
+    #df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
+
+    sql="select flnk.`航班日期`,lnk.姓名,ags.`From`,ags.`To`,ags.%s as 数据 " \
+    "from crew_link lnk,ags_snapshot ags,flight_link_chn flnk " \
+    "where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id " \
+    "and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (parameter,month)
+    df=query_df(sql)
+    print(df)
+    #数据类型转换 text->float
+    df['数据'] = df['数据'].astype('float')
+    #数据聚合
+    df=df.groupby('姓名').mean()
+    #筛选
+    df=df.loc[df['数据']>=2000]
+    #排序
+    print(df.sort_values(by=['数据'],ascending=False))
+    #df_name=df['数据'].groupby(df['姓名'])
+    #mean=df_name.mean
+    #print(mean)
+    
+
+    #数据聚合
+
+    return df
+
+def analyze_person_statics_2(month=None):
+    """
+    [数据统计-列出某月指定快照数据全部结果 汇总后进行统计学描述分析]######
+    函数说明 乔晖 2018/12/21
+    [输入Parameters]:
+        month:要分析的月份如'2018-07'
+        parameter_list:list 要分析的快照列表，如平飘距离和着陆载荷 ['`VRTG_MAX_LD (g)`','`DIST_LDG (feet)`'] 注意：一定要有``否则会出错
+
+    -------
+    [返回值return]：
+    返回本人当月参数的Q0-Q4值
+        修改说明：
+    2018/12/21
+    1、函数初始化
+    2、赋值方式由set_value更改为at，原因是未来pandas可能不再支持set_value，提前做好准备
+    """ 
+    #初始化，赋空值
+    #df2=pd.DataFrame(index=parameter_list,columns=['count','Q0','Q1','Q2','Q3','Q4'])
+
+    sql="select flnk.`航班日期`,lnk.姓名,ags.`From`,ags.`To`,ags.`DIST_LDG (feet)` as 着陆距离,ags.`VRTG_MAX_LD (g)` as 着陆载荷 " \
+    "from crew_link lnk,ags_snapshot ags,flight_link_chn flnk " \
+    "where ags.key_id=lnk.key_id and flnk.key_id=lnk.key_id and flnk.key_id=ags.key_id " \
+    "and date_format(flnk.航班日期,'%%Y-%%m')='%s'" % (month)
+    df=query_df(sql)
+    #print(df)
+    #数据类型转换 text->float
+    df['着陆距离'] = df['着陆距离'].astype('float')
+    df['着陆载荷'] = df['着陆载荷'].astype('float')
+    #数据聚合
+    df=df.groupby('姓名').mean()
+    #筛选
+    #df=df.loc[df['着陆距离']>=2000]
+    #排序
+    print(df.sort_values(by=['着陆载荷'],ascending=False))
+    #df_name=df['数据'].groupby(df['姓名'])
+    #mean=df_name.mean
+    #print(df)
+    
+
+    #数据聚合
+
+    return df
+
 def analyze_qar_download_status(tail_list='',start='',end='',fleet_list='73M'):
     """
     [数据统计-列出每月航班数和快照数的差值，以筛选QAR源头未导入的航班]######
@@ -457,4 +541,5 @@ def __init__(self):
     pass
 
 if __name__ == '__main__':
+    analyze_person_statics_2(month='2018-11')
     pass
