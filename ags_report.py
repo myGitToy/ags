@@ -17,8 +17,10 @@
 
 基本框架：
     __init__   初始化
+    mail_init 初始化每月发送列表功能 每月导入一次，将ags_mail_list中的邮件地址按照要求导入ags_mail_log
     send    发送邮件
     arrow 生成代表数据高低的箭头
+    report_person_detail (未实装)生成当月个人QAR全部事件汇总表（可筛选事件等级和有效性）
     
 数据结构：
     ags_mail_list
@@ -29,27 +31,31 @@
 
 
     ags_mail_log            
-    +----------+-----------+-----------+------------+
-    send_id     mail_id     month       status
-    +----------+-----------+-----------+------------+
+    +----------+-----------+-----------+------------+------------+------------+
+    send_id     mail_id     month       start_date      end_date    status
+    +----------+-----------+-----------+------------+------------+------------+
     int key     int         varchar     int 0:未发送 1:已发送
     
     
 数据结构说明：
     1. ags_mail_list
-        1.1 本表使用name/dep_name/email做三重约束
-        1.2 三重约束的目的是为了防止插入重复数值
-        1.3 本表没有采用自增长的id，原因是未来设计每月会重复导入一次，因此数据表中内容会做清除，因此不用id作为primary key
-        1.4 未来本表可能的数据变动
-            1.4.1 人员调整 所属分部会有变化
-            1.4.2 新增加人员 新下队的
-            1.4.3 人员重名
+        1.1 mail_id 主键 自增长格式
+        1.2 未来本表可能的数据变动
+            1.2.1 人员调整 所属分部会有变化
+            1.2.2 新增加人员 新下队的
+            1.2.3 人员重名
+    2. ags_mail_log
+        2.1 需要做邮件发送的email地址列表
+        2.2 如果成功发送，则status从0变为1
+        2.3 导入和发送成功的信息会写入日志 地址为根目录下的log_mail.log
 版本信息：
-    version 0.1
-    乔晖 2018/9/23
+    version 0.2
+    乔晖 2018/10/7
 
 修改日志：
-
+    2018/10/6
+    1. 增加[mail_init]函数：初始化每月发送列表功能
+    2. 增加[send]：邮件群发功能
 
 
 
@@ -84,7 +90,7 @@ from ags_mail import mail as mail
 #from  profile.setup import setup_snapshot
 
 #参数初始化
-logging.basicConfig(filename='logger.log', level = logging.DEBUG, format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='log_mail.log', level = logging.DEBUG, format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 #logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 m_month=setup.month
 m_start_date=setup.start_date
@@ -171,7 +177,7 @@ def report_person_v1(name=None,month=None,df_event=None,df_fleet=None):
     text_msg=text_msg+'        2.1.2 本月起飞平均抬轮速率数据如下（单位：度/秒）：\n'    
     m_loc_x_name='`PITCH_RATAVGTO (deg/s)`'
     m_arrow=arrow(df_person.at[m_loc_x_name,'Q2'],df_fleet.at[m_loc_x_name,'Q1'],df_fleet.at[m_loc_x_name,'Q3'])
-    text_msg=text_msg+'            本人数值：中位数：%s %s；最大值：%s；最小值：%s；\n' % (round(df_person.at[m_loc_x_name,'Q2'],3),m_arrow,round(df_person.at[m_loc_x_name,'Q4'],3),round(df_person.at[m_loc_x_name,'Q0'],3))
+    text_msg=text_msg+'            本人数值：中位数：%s %s；最大值：%s�����最小值：%s；\n' % (round(df_person.at[m_loc_x_name,'Q2'],3),m_arrow,round(df_person.at[m_loc_x_name,'Q4'],3),round(df_person.at[m_loc_x_name,'Q0'],3))
     text_msg=text_msg+'            机队参考值：中位数：%s；机队25%%至75%%区间：%s-%s；\n' % (round(df_fleet.at[m_loc_x_name,'Q2'],3),round(df_person.at[m_loc_x_name,'Q1'],3),round(df_person.at[m_loc_x_name,'Q3'],3))
     text_msg=text_msg+'\n'  
     
@@ -311,7 +317,7 @@ def report_person_detail(self,filter_event_level=3,filter_event_valid='valid'):
         
     -------
     [返回值return]：
-        返回机队当月指定参数的Q0-Q4值   
+        dataframe格式   
     """
     pass
 
@@ -374,7 +380,7 @@ def mail_init(month=None,start_date=None,end_date=None):
     month string 需要导入列表的月份 如2018-10
     start_date string 开始日期
     end_date 结束日期
-    注：开始和结束日期用于定位数据采集的时间段，和发送日期无关
+    注：开始和结束日期用于定位���据���集的时间段，和发送日期无关
     -------
     [返回值return]：
         True False
@@ -417,11 +423,14 @@ def __init__(self,month=None,start_date=None,end_date=None):
    
     
 if __name__ == '__main__':
-    '''
-    获取单人QAR信息
-    #df_event=export_ags_event_summary(start_date=m_start_date,end_date=m_end_date,flag_csv=0)
-    #df_fleet=analyze_fleet_month_df(ac_type,m_month,m_parameters) 
-    #report_person_v1('张颢',m_month)
+    
+    #获取单人QAR信息
+    
+    df_event=export_ags_event_summary(start_date='2018-09-01',end_date='2018-09-30',flag_csv=0)
+    df_fleet=analyze_fleet_month_df(ac_type,'2018-09',m_parameters) 
+    text_msg=report_person_v1(name='谈大卫',month='2018-09',df_event=df_event,df_fleet=df_fleet)
+    print(text_msg)
     '''
     #群发邮件
-    send(rpt.max_mail_list)
+    #send(rpt.max_mail_list)
+    '''

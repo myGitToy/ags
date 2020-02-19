@@ -11,6 +11,7 @@
 修改日志：
     2018/9/16
         1. 调整代码规范，运行正常，无bug
+
 """
 import ags_event as event
 import ags_snapshot as snapshot
@@ -43,8 +44,9 @@ print("crew link line process complete")
 #月度事件匹配
 event.match()
 #数据导出
-event.export_ags_event_summary(start_date=start,end_date=end)
-event.export_ags_event_person(start_date=start,end_date=end)
+event.export_ags_event_summary(start_date = start , end_date = end)
+event.export_ags_event_person(start_date = start , end_date = end)
+event.export_ags_event_maintenance(start_date = start , end_date = end , flag_csv = 1)
 print("ags event process complete")
 
 #########导入ags_snapshot
@@ -67,4 +69,4 @@ print('导出每个月MAX没有匹配的航班列表，数据详情请下载\exp
 
 #########导入邮件发送列表
 #初始化邮件发送列表
-report.mail_init(month=month,start_date=start,end_date=end)
+report.mail_init(month = month , start_date = start , end_date = end)

@@ -11,13 +11,17 @@
     export_ags_event_summary    导出月度（指定日期间）QAR事件率汇总表（每人一行，行数等同于飞行员人数）
     export_ags_event_summary_dep    将export_ags_event_summary的结果拆分成分部后导出到~/export 
                                     原计划这个功能将通过邮件发送拆分后的事件给各分部，现在搁置，由于担心分部滥用数据
-    export_ags_event_person     导出月度（指定日期间）QAR所有事件含人名的表格（每月约7万条）
+    export_ags_event_person     导出月度（指定日期间）QAR所有事件含人名的表格（每月约7万条） 排除部分人员和事件
+    
 
 版本信息：
     version 0.1
     乔晖 2018/9/16
 
 修改日志：
+    2020/2/19
+        1. [export_ags_event_person]中排除第二副驾驶信息、排除自定义时间的导出，因为excel最大为140万行，一年数据可能会超这个限制
+        2. 增加[export_ags_event_maintenance]函数，用于导出用户自定义的事件
     2018/9/16
         1. 在老版本的基础上建立基本框架，逐渐按照要求进行移植
     2018/8/13
@@ -205,6 +209,8 @@ def export_ags_event_person(start_date='',end_date='',flag_csv=1):
     [导出事件详细数据 按月]######
     函数说明 乔晖 2018/6/12
     将每月ags_event导出成详细表格 event_detail
+    排除二副信息 2020/2/19
+    排除
     不排除ags_event_exception
     每月数据约8万条
     输入：
@@ -214,7 +220,7 @@ def export_ags_event_person(start_date='',end_date='',flag_csv=1):
     """ 
     sql="select ags.event_id,lnk.key_id,lnk.ags_id,lnk.姓名,lnk.机上岗位,lnk.技术授权,lnk.责任机长标识,DATE_FORMAT(ags.`Flight Date`, '%%Y-%%m-%%d') as 航班日期,ags.`A/C Type`,ags.`A/C Tail`,ags.`Flight No`,ags.`Departure Airport`,ags.`Arrival Airport`,ags.`Event Short Name`,ags.`Maximum Value`,ags.`Severity Class No`,ags.`Event Validity` " \
         "from ags_event ags,crew_link lnk " \
-        "where lnk.key_id=ags.key_id and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
+        "where lnk.key_id=ags.key_id and lnk.技术授权 not in ('D1','D2') and ags.`Event Short Name` not in ('SET ALT AND VHF KEY' , 'Master caution' , 'thr spd diff' , 'SAL Heading large') and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
     df_detail=query_df(sql)
     #重构索引
     df_detail.set_index(['event_id'], inplace = True) 
@@ -222,7 +228,28 @@ def export_ags_event_person(start_date='',end_date='',flag_csv=1):
     if flag_csv==1:
         df_detail.to_csv('%s/ags/%s_%s_event_person.csv' % (os.getcwd(),start_date,end_date),encoding='utf_8_sig')
 
-
+def export_ags_event_maintenance(start_date='',end_date='',flag_csv=1):
+    """
+    [导出事件详细数据 按月]######
+    函数说明 乔晖 2020/02/19
+    由export_ags_event_person衍生而来，负责导出每月用户自定义的特殊事件 比如VHF/入口速度大等
+    输入：
+    start_date：开始日期
+    end_date：结束日期
+    flag_csv：是否输出csv格式数据 1为输出 0为不输出
+    """ 
+    sql="select ags.event_id,lnk.key_id,lnk.ags_id,lnk.姓名,lnk.机上岗位,lnk.技术授权,lnk.责任机长标识,DATE_FORMAT(ags.`Flight Date`, '%%Y-%%m-%%d') as 航班日期,ags.`A/C Type`,ags.`A/C Tail`,ags.`Flight No`,ags.`Departure Airport`,ags.`Arrival Airport`,ags.`Event Short Name`,ags.`Maximum Value`,ags.`Severity Class No`,ags.`Event Validity` " \
+        "from ags_event ags,crew_link lnk " \
+        "where lnk.key_id = ags.key_id and ags.`Event Short Name` in ('SET ALT AND VHF KEY' ,  'thr spd diff' , 'SAL Heading large') and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
+    df_detail=query_df(sql)
+    
+    #重构索引
+    df_detail.set_index(['event_id'], inplace = True) 
+     #结果输出至excel
+    if flag_csv==1:
+        df_detail.to_csv('%s/ags/%s_%s_event_maintenance.csv' % (os.getcwd(),start_date,end_date),encoding='utf_8_sig')
+        
+        
 #路径设置
 #print(os.getcwd())
 #print(sys.path[0])
