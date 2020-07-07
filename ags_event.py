@@ -240,7 +240,7 @@ def export_ags_event_maintenance(start_date='',end_date='',flag_csv=1):
     """ 
     sql="select ags.event_id,lnk.key_id,lnk.ags_id,lnk.姓名,lnk.机上岗位,lnk.技术授权,lnk.责任机长标识,DATE_FORMAT(ags.`Flight Date`, '%%Y-%%m-%%d') as 航班日期,ags.`A/C Type`,ags.`A/C Tail`,ags.`Flight No`,ags.`Departure Airport`,ags.`Arrival Airport`,ags.`Event Short Name`,ags.`Maximum Value`,ags.`Severity Class No`,ags.`Event Validity` " \
         "from ags_event ags,crew_link lnk " \
-        "where lnk.key_id = ags.key_id and ags.`Event Short Name` in ('SET ALT AND VHF KEY' ,  'thr spd diff' , 'SAL Heading large' 'cpt ctrl whell' , 'fo ctrl whell') and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
+        "where lnk.key_id = ags.key_id and ags.`Event Short Name` in ('SET ALT AND VHF KEY' ,  'thr spd diff' , 'SAL Heading large' , 'cpt ctrl whell' , 'fo ctrl whell') and ags.`Flight Date` between '%s' and '%s'" % (start_date,end_date)
     df_detail=query_df(sql)
     
     #重构索引
