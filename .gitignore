@@ -112,6 +112,7 @@ mysql_df.py
 
 #配置文件
 profile/
+ags/profile
 
 #csv输出文件夹
 export/
