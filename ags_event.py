@@ -258,4 +258,4 @@ def __init__(self):
     pass
 
 if __name__ == '__main__':
-    export_ags_event_person(start_date = '2019-01-01' , end_date = '2019-12-31')
+    export_ags_event_maintenance(start_date = '2019-01-01' , end_date = '2019-12-31')

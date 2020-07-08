@@ -118,7 +118,7 @@ ags/profile
 export/
 
 #csv格式文件
-#*.csv
+*.csv
 
 #增加gmail client_secret
 client_secret.json
